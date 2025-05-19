@@ -37,6 +37,7 @@
 #import "XCUIElement+FBUtilities.h"
 #import "XCUIElement+FBWebDriverAttributes.h"
 #import "XCUIElementQuery.h"
+#import "FBElementHelpers.h"
 
 static NSString* const FBUnknownBundleId = @"unknown";
 
@@ -202,7 +203,7 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   info[@"label"] = FBValueOrNull(wrappedSnapshot.wdLabel);
   info[@"rect"] = wrappedSnapshot.wdRect;
   
-  NSMutableDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self attributeBlockMapForSnapshot:snapshot
+  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForSnapshot:snapshot
                                                                                 wrappedSnapshot:wrappedSnapshot];
 
   NSSet *nonPrefixedKeys = [NSSet setWithObjects:FBExclusionAttributeFrame,
@@ -237,9 +238,9 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   return info;
 }
 
-// Private helper that builds all attribute blocks for a given snapshot.
-// Includes both base attributes and any element-specific ones (e.g. placeholder for text inputs, etc.).
-+ (NSMutableDictionary<NSString *, NSString *(^)(void)> *)attributeBlockMapForSnapshot:(id<FBXCElementSnapshot>)snapshot
+// Helper used by `dictionaryForElement:` to assemble attribute value blocks,
+// including both common attributes and conditionally included ones like placeholderValue.
++ (NSDictionary<NSString *, NSString *(^)(void)> *)fb_attributeBlockMapForSnapshot:(id<FBXCElementSnapshot>)snapshot
                                                                        wrappedSnapshot:(FBXCElementSnapshotWrapper *)wrappedSnapshot
 {
   // Base attributes common to every element
@@ -262,14 +263,16 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   }
   } mutableCopy];
   
+  XCUIElementType elementType = wrappedSnapshot.elementType;
+  
   // Text-input placeholder (only for elements that support inner text)
-  if ([wrappedSnapshot fb_supportsPlaceholder]) {
+  if (FBDoesElementSupportInnerText(elementType)) {
     blocks[FBExclusionAttributePlaceholderValue] = ^{
       return (NSString *)FBValueOrNull(wrappedSnapshot.wdPlaceholderValue);
     };
   }
   
-  return blocks;
+  return [blocks copy];
 }
 
 + (NSDictionary *)accessibilityInfoForElement:(id<FBXCElementSnapshot>)snapshot
