@@ -203,8 +203,7 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   info[@"label"] = FBValueOrNull(wrappedSnapshot.wdLabel);
   info[@"rect"] = wrappedSnapshot.wdRect;
   
-  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForSnapshot:snapshot
-                                                                                wrappedSnapshot:wrappedSnapshot];
+  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForWrappedSnapshot:wrappedSnapshot];
 
   NSSet *nonPrefixedKeys = [NSSet setWithObjects:FBExclusionAttributeFrame,
                             FBExclusionAttributePlaceholderValue, nil];
@@ -240,8 +239,8 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
 
 // Helper used by `dictionaryForElement:` to assemble attribute value blocks,
 // including both common attributes and conditionally included ones like placeholderValue.
-+ (NSDictionary<NSString *, NSString *(^)(void)> *)fb_attributeBlockMapForSnapshot:(id<FBXCElementSnapshot>)snapshot
-                                                                       wrappedSnapshot:(FBXCElementSnapshotWrapper *)wrappedSnapshot
++ (NSDictionary<NSString *, NSString *(^)(void)> *)fb_attributeBlockMapForWrappedSnapshot:(FBXCElementSnapshotWrapper *)wrappedSnapshot
+
 {
   // Base attributes common to every element
   NSMutableDictionary<NSString *, NSString *(^)(void)> *blocks =
