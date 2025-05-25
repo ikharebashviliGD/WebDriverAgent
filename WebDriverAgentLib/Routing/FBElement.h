@@ -62,9 +62,6 @@ NS_ASSUME_NONNULL_BEGIN
 /*! Whether the element is considered hittable based on snapshot hit point */
 @property (nonatomic, readonly, getter = isWDHittable) BOOL wdHittable;
 
-/*! Whether the element is truly hittable based on XCUIElement.hittable */
-@property (nonatomic, readonly, getter = isWDNativeHittable) BOOL wdNativeHittable;
-
 /*! Element's index relatively to its parent. Starts from zero */
 @property (nonatomic, readonly) NSUInteger wdIndex;
 

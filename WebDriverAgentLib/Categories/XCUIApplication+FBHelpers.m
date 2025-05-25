@@ -38,6 +38,7 @@
 #import "XCUIElement+FBWebDriverAttributes.h"
 #import "XCUIElementQuery.h"
 #import "FBElementHelpers.h"
+#import "XCUIElement+FBUID.h"
 
 static NSString* const FBUnknownBundleId = @"unknown";
 
@@ -180,7 +181,7 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
 - (NSDictionary *)fb_tree:(nullable NSSet<NSString *> *)excludedAttributes
 {
   id<FBXCElementSnapshot> snapshot = [self fb_standardSnapshot];
-  return [self.class dictionaryForElement:snapshot
+  return [self dictionaryForElement:snapshot
                                 recursive:YES
                        excludedAttributes:excludedAttributes];
 }
@@ -191,9 +192,9 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   return [self.class accessibilityInfoForElement:snapshot];
 }
 
-+ (NSDictionary *)dictionaryForElement:(id<FBXCElementSnapshot>)snapshot 
-                             recursive:(BOOL)recursive
-                    excludedAttributes:(nullable NSSet<NSString *> *)excludedAttributes
+- (NSDictionary *)dictionaryForElement:(id<FBXCElementSnapshot>)snapshot
+                                 recursive:(BOOL)recursive
+                        excludedAttributes:(nullable NSSet<NSString *> *)excludedAttributes
 {
   NSMutableDictionary *info = [[NSMutableDictionary alloc] init];
   info[@"type"] = [FBElementTypeTransformer shortStringWithElementType:snapshot.elementType];
@@ -203,10 +204,25 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   info[@"value"] = FBValueOrNull(wrappedSnapshot.wdValue);
   info[@"label"] = FBValueOrNull(wrappedSnapshot.wdLabel);
   info[@"rect"] = wrappedSnapshot.wdRect;
-  
-  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForWrappedSnapshot:wrappedSnapshot
-                              excludedAttributes:excludedAttributes];
 
+  // Flatten the tree to get all snapshots
+  NSArray<id<FBXCElementSnapshot>> *allSnapshots = [self.class fb_flattenTree:snapshot];
+  NSArray<XCUIElement *> *resolvedElements = [self fb_filterDescendantsWithSnapshots:allSnapshots onlyChildren:NO];
+
+  NSMutableDictionary<NSString *, XCUIElement *> *uidToElement = [NSMutableDictionary dictionary];
+  for (XCUIElement *element in resolvedElements) {
+    NSString *uid = element.fb_uid;
+    if (uid != nil) {
+      uidToElement[uid] = element;
+    }
+  }
+
+  NSString *uid = [FBXCElementSnapshotWrapper wdUIDWithSnapshot:wrappedSnapshot.snapshot];
+  XCUIElement *resolvedElement = uid != nil ? uidToElement[uid] : nil;
+
+  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self.class fb_attributeBlockMapForWrappedSnapshot:wrappedSnapshot
+                                                                                                   resolvedElement:resolvedElement
+                                                                                               excludedAttributes:excludedAttributes];
 
   NSSet *nonPrefixedKeys = [NSSet setWithObjects:
                             FBExclusionAttributeFrame,
@@ -215,14 +231,14 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
                             nil];
 
   for (NSString *key in attributeBlocks) {
-      if (excludedAttributes == nil || ![excludedAttributes containsObject:key]) {
-          NSString *value = ((NSString * (^)(void))attributeBlocks[key])();
-          if ([nonPrefixedKeys containsObject:key]) {
-              info[key] = value;
-          } else {
-              info[[NSString stringWithFormat:@"is%@", [key capitalizedString]]] = value;
-          }
+    if (excludedAttributes == nil || ![excludedAttributes containsObject:key]) {
+      NSString *value = ((NSString * (^)(void))attributeBlocks[key])();
+      if ([nonPrefixedKeys containsObject:key]) {
+        info[key] = value;
+      } else {
+        info[[NSString stringWithFormat:@"is%@", [key capitalizedString]]] = value;
       }
+    }
   }
 
   if (!recursive) {
@@ -235,20 +251,26 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
     for (id<FBXCElementSnapshot> childSnapshot in childElements) {
       @autoreleasepool {
         [info[@"children"] addObject:[self dictionaryForElement:childSnapshot
-                                                      recursive:YES
-                                             excludedAttributes:excludedAttributes]];
+                                                           recursive:YES
+                                                  excludedAttributes:excludedAttributes]];
       }
     }
   }
   return info;
 }
 
-// Helper used by `dictionaryForElement:` to assemble attribute value blocks,
-// including both common attributes and conditionally included ones like placeholderValue.
++ (NSArray<id<FBXCElementSnapshot>> *)fb_flattenTree:(id<FBXCElementSnapshot>)snapshot
+{
+  NSMutableArray *result = [NSMutableArray arrayWithObject:snapshot];
+  for (id<FBXCElementSnapshot> child in snapshot.children) {
+    [result addObjectsFromArray:[self fb_flattenTree:child]];
+  }
+  return result;
+}
+
 + (NSDictionary<NSString *, NSString *(^)(void)> *)fb_attributeBlockMapForWrappedSnapshot:(FBXCElementSnapshotWrapper *)wrappedSnapshot
-                                                                    excludedAttributes:(nullable NSSet<NSString *> *)excludedAttributes
-
-
+                                                                          resolvedElement:(nullable XCUIElement *)resolvedElement
+                                                                      excludedAttributes:(nullable NSSet<NSString *> *)excludedAttributes
 {
   // Base attributes common to every element
   NSMutableDictionary<NSString *, NSString *(^)(void)> *blocks =
@@ -281,14 +303,15 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
       return (NSString *)FBValueOrNull(wrappedSnapshot.wdPlaceholderValue);
     };
   }
-  
-  // Adding isHittable, only if not excluded
-    if (excludedAttributes == nil || ![excludedAttributes containsObject:FBExclusionAttributeHittable]) {
-      blocks[FBExclusionAttributeHittable] = ^{
-        return [@([wrappedSnapshot isWDNativeHittable]) stringValue];
-      };
-    }
-  
+
+  // Add isHittable only if resolvedElement is available and attribute not excluded
+  // TODO: gate behind explicit config flag
+  if (resolvedElement && (excludedAttributes == nil || ![excludedAttributes containsObject:FBExclusionAttributeHittable])) {
+    blocks[FBExclusionAttributeHittable] = ^{
+      return [@(resolvedElement.hittable) stringValue];
+    };
+  }
+
   return [blocks copy];
 }
 
