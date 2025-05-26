@@ -204,8 +204,7 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   info[@"label"] = FBValueOrNull(wrappedSnapshot.wdLabel);
   info[@"rect"] = wrappedSnapshot.wdRect;
   
-  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForWrappedSnapshot:wrappedSnapshot
-                              excludedAttributes:excludedAttributes];
+  NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForWrappedSnapshot:wrappedSnapshot];
 
 
   NSSet *nonPrefixedKeys = [NSSet setWithObjects:
@@ -246,9 +245,6 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
 // Helper used by `dictionaryForElement:` to assemble attribute value blocks,
 // including both common attributes and conditionally included ones like placeholderValue.
 + (NSDictionary<NSString *, NSString *(^)(void)> *)fb_attributeBlockMapForWrappedSnapshot:(FBXCElementSnapshotWrapper *)wrappedSnapshot
-                                                                    excludedAttributes:(nullable NSSet<NSString *> *)excludedAttributes
-
-
 {
   // Base attributes common to every element
   NSMutableDictionary<NSString *, NSString *(^)(void)> *blocks =
@@ -282,12 +278,9 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
     };
   }
   
-  // Adding isHittable, only if not excluded
-    if (excludedAttributes == nil || ![excludedAttributes containsObject:FBExclusionAttributeHittable]) {
-      blocks[FBExclusionAttributeHittable] = ^{
-        return [@([wrappedSnapshot isWDNativeHittable]) stringValue];
-      };
-    }
+  blocks[FBExclusionAttributeHittable] = ^{
+    return [@([wrappedSnapshot isWDResolvedHittable]) stringValue];
+  };
   
   return [blocks copy];
 }

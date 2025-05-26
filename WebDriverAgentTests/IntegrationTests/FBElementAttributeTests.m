@@ -201,7 +201,7 @@
   id<FBXCElementSnapshot> snapshot = [button fb_standardSnapshot];
   FBXCElementSnapshotWrapper *wrapped = [FBXCElementSnapshotWrapper ensureWrapped:snapshot];
 
-  XCTAssertEqual([wrapped isWDNativeHittable], button.hittable);
+  XCTAssertEqual([wrapped isWDResolvedHittable], button.hittable);
 }
 
 @end

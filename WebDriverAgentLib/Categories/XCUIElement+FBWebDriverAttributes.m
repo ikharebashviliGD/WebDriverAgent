@@ -239,35 +239,12 @@
   return nil == result ? NO : result.hittable;
 }
 
-/*! Whether the element is truly hittable based on XCUIElement.hittable */
-- (BOOL)isWDNativeHittable
+- (BOOL)isWDResolvedHittable
 {
-  XCUIApplication *app = [XCUIApplication fb_activeApplication];
-  XCUIElementQuery *query = [app descendantsMatchingType:self.elementType];
-  XCUIElement *matchedElement = nil;
-
-  NSString *identifier = self.identifier;
-  NSString *label = self.label;
-  XCUIElementType type = self.elementType;
-
-  // Attempt to match by accessibilityIdentifier first
-  if (identifier.length > 0) {
-    XCUIElement *candidate = [query matchingIdentifier:identifier].element;
-    if (candidate.exists && candidate.elementType == type) {
-      matchedElement = candidate;
-    }
-  }
-
-  // If no match by identifier, try matching by label and type
-  if (!matchedElement.exists && label.length > 0) {
-    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(XCUIElement *el, NSDictionary *_) {
-      return [el.label isEqualToString:label] && el.elementType == type;
-    }];
-    matchedElement = [[query matchingPredicate:predicate] element];
-  }
-
-  // Return hittable status if element is found, otherwise NO
-  return matchedElement.exists ? matchedElement.hittable : NO;
+  // Snapshot-based estimation of XCUIElement.hittable using accessibility, visibility, and hit point.
+  // Does not rely on live XCUIElement resolution.
+  // See discussion: https://github.com/appium/WebDriverAgent/pull/1021
+  return self.isWDAccessible && self.isWDHittable && self.isWDVisible;
 }
 
 - (NSDictionary *)wdRect
