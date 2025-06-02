@@ -153,7 +153,7 @@ static NSString *const topNodeIndexPath = @"top";
                                            writer:writer
                                      elementStore:nil
                                             query:nil
-                                          options:options];
+                              excludingAttributes:options.excludedAttributes];
     }
 
     if (rc >= 0 && hasScope) {
@@ -229,7 +229,7 @@ static NSString *const topNodeIndexPath = @"top";
                                          writer:writer
                                    elementStore:elementStore
                                           query:xpathQuery
-                                        options:nil];
+                            excludingAttributes:nil];
     if (rc >= 0) {
       rc = xmlTextWriterEndDocument(writer);
       if (rc < 0) {
@@ -349,20 +349,20 @@ static NSString *const topNodeIndexPath = @"top";
                                  writer:(xmlTextWriterPtr)writer
                            elementStore:(nullable NSMutableDictionary *)elementStore
                                   query:(nullable NSString*)query
-                                options:(nullable FBXMLGenerationOptions *)options
+                    excludingAttributes:(nullable NSArray<NSString *> *)excludedAttributes
 {
   // Trying to be smart here and only including attributes, that were asked in the query, to the resulting document.
   // This may speed up the lookup significantly in some cases
   NSMutableSet<Class> *includedAttributes;
   if (nil == query) {
     includedAttributes = [NSMutableSet setWithArray:FBElementAttribute.supportedAttributes];
-    if (options == nil || !FBConfiguration.includeHittableInSource) {
+    if (!FBConfiguration.includeHittableInSource) {
       // The hittable attribute is expensive to calculate for each snapshot item
       // thus we only include it when requested explicitly
       [includedAttributes removeObject:FBHittableAttribute.class];
     }
-    if (nil != options.excludedAttributes) {
-      for (NSString *excludedAttributeName in options.excludedAttributes) {
+    if (nil != excludedAttributes) {
+      for (NSString *excludedAttributeName in excludedAttributes) {
         for (Class supportedAttribute in FBElementAttribute.supportedAttributes) {
           if ([[supportedAttribute name] caseInsensitiveCompare:excludedAttributeName] == NSOrderedSame) {
             [includedAttributes removeObject:supportedAttribute];
