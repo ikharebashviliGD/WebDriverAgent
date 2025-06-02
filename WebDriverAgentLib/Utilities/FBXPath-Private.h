@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Gets xmllib2-compatible XML representation of n XCElementSnapshot instance
-
+ 
  @param root the root element to execute XPath query for
  @param writer the correspondig libxml2 writer object
  @param elementStore an empty dictionary to store indexes mapping or nil if no mappings should be stored

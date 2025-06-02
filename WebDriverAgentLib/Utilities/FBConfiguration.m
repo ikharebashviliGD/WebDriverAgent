@@ -653,5 +653,4 @@ static BOOL FBShouldIncludeHittableInSource = NO;
   return FBShouldIncludeHittableInSource;
 }
 
-
 @end
