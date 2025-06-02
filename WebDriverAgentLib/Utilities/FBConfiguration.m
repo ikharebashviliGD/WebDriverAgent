@@ -61,6 +61,7 @@ static BOOL FBLimitXpathContextScope = YES;
 #if !TARGET_OS_TV
 static UIInterfaceOrientation FBScreenshotOrientation;
 #endif
+static BOOL FBShouldIncludeHittableInSource = NO;
 
 @implementation FBConfiguration
 
@@ -641,5 +642,16 @@ static UIInterfaceOrientation FBScreenshotOrientation;
   }
   return NO;
 }
+
++ (void)setIncludeHittableInSource:(BOOL)enabled
+{
+  FBShouldIncludeHittableInSource = enabled;
+}
+
++ (BOOL)includeHittableInSource
+{
+  return FBShouldIncludeHittableInSource;
+}
+
 
 @end

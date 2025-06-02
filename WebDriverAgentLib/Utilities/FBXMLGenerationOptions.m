@@ -23,11 +23,4 @@
   return self;
 }
 
-
-- (FBXMLGenerationOptions *)withUseNativeHittable:(BOOL)useNativeHittable
-{
-  self.useNativeHittable = useNativeHittable;
-  return self;
-}
-
 @end

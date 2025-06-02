@@ -147,7 +147,9 @@ static NSString *const topNodeIndexPath = @"top";
 
     if (rc >= 0) {
       [self waitUntilStableWithElement:root];
-      rc = [self xmlRepresentationWithRootElement:[self snapshotWithRoot:root useNative:options.useNativeHittable]
+      // If 'includeHittableInSource' setting is enabled, then use native snapshots
+      // to calculate a more accurate value for the 'hittable' attribute.
+      rc = [self xmlRepresentationWithRootElement:[self snapshotWithRoot:root useNative:FBConfiguration.includeHittableInSource]
                                            writer:writer
                                      elementStore:nil
                                             query:nil
@@ -354,7 +356,7 @@ static NSString *const topNodeIndexPath = @"top";
   NSMutableSet<Class> *includedAttributes;
   if (nil == query) {
     includedAttributes = [NSMutableSet setWithArray:FBElementAttribute.supportedAttributes];
-    if (options == nil || !options.useNativeHittable) {
+    if (options == nil || !FBConfiguration.includeHittableInSource) {
       // The hittable attribute is expensive to calculate for each snapshot item
       // thus we only include it when requested explicitly
       [includedAttributes removeObject:FBHittableAttribute.class];

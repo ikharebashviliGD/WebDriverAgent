@@ -50,13 +50,10 @@ static NSString *const SOURCE_FORMAT_DESCRIPTION = @"description";
       ? nil
       : [request.parameters[@"excluded_attributes"] componentsSeparatedByString:@","];
     
-    BOOL useNativeHittable = [request.parameters[@"useNativeHittable"] boolValue];
-
     result = [application fb_xmlRepresentationWithOptions:
-        [[[[FBXMLGenerationOptions new]
-            withExcludedAttributes:excludedAttributes]
-           withScope:sourceScope]
-           withUseNativeHittable:useNativeHittable]];
+              [[[FBXMLGenerationOptions new]
+                withExcludedAttributes:excludedAttributes]
+               withScope:sourceScope]];
 
   } else if ([sourceType caseInsensitiveCompare:SOURCE_FORMAT_JSON] == NSOrderedSame) {
     NSString *excludedAttributesString = request.parameters[@"excluded_attributes"];
