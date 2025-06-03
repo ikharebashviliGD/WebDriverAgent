@@ -149,7 +149,8 @@ static NSString *const topNodeIndexPath = @"top";
       [self waitUntilStableWithElement:root];
       // If 'includeHittableInPageSource' setting is enabled, then use native snapshots
       // to calculate a more accurate value for the 'hittable' attribute.
-      rc = [self xmlRepresentationWithRootElement:[self snapshotWithRoot:root useNative:FBConfiguration.includeHittableInPageSource]
+      rc = [self xmlRepresentationWithRootElement:[self snapshotWithRoot:root
+                                                        useNative:FBConfiguration.includeHittableInPageSource]
                                            writer:writer
                                      elementStore:nil
                                             query:nil
