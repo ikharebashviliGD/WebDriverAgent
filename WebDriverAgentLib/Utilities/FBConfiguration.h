@@ -340,8 +340,8 @@ typedef NS_ENUM(NSInteger, FBConfigurationKeyboardPreference) {
  *
  * @param enabled Either YES or NO
  */
-+ (void)setIncludeHittableInSource:(BOOL)enabled;
-+ (BOOL)includeHittableInSource;
++ (void)setincludeHittableInPageSource:(BOOL)enabled;
++ (BOOL)includeHittableInPageSource;
 
 @end
 
