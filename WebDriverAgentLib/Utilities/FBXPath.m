@@ -109,6 +109,10 @@
 
 @end
 
+@interface FBTraitsAttribute : FBElementAttribute
+
+@end
+
 #if TARGET_OS_TV
 
 @interface FBFocusedAttribute : FBElementAttribute
@@ -591,6 +595,7 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
            FBIndexAttribute.class,
            FBHittableAttribute.class,
            FBPlaceholderValueAttribute.class,
+           FBTraitsAttribute.class,
            FBNativeFrameAttribute.class,
           ];
 }
@@ -840,4 +845,18 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 {
   return NSStringFromCGRect(element.wdNativeFrame);
 }
+@end
+
+@implementation FBTraitsAttribute
+
++ (NSString *)name
+{
+  return @"traits";
+}
+
++ (NSString *)valueForElement:(id<FBElement>)element
+{
+  return element.wdTraits;
+}
+
 @end
