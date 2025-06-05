@@ -22,6 +22,7 @@
 #import "XCUIElement+FBUtilities.h"
 #import "XCUIElement+FBWebDriverAttributes.h"
 #import "XCTestPrivateSymbols.h"
+#import "FBElementHelpers.h"
 
 
 @interface FBElementAttribute : NSObject
@@ -110,6 +111,14 @@
 @end
 
 @interface FBTraitsAttribute : FBElementAttribute
+
+@end
+
+@interface FBMinValueAttribute : FBElementAttribute
+
+@end
+
+@interface FBMaxValueAttribute : FBElementAttribute
 
 @end
 
@@ -437,6 +446,16 @@ static NSString *const topNodeIndexPath = @"top";
     if (includedAttributes && ![includedAttributes containsObject:attributeCls]) {
       continue;
     }
+    // Text-input placeholder (only for elements that support inner text)
+    if ((attributeCls == FBPlaceholderValueAttribute.class) &&
+        !FBDoesElementSupportInnerText(element.elementType)) {
+      continue;
+    }
+    // Only for elements that support min/max value
+    if ((attributeCls == FBMinValueAttribute.class || attributeCls == FBMaxValueAttribute.class) &&
+        !FBDoesElementSupportMinMaxValue(element.elementType)) {
+      continue;
+    }
     int rc = [attributeCls recordWithWriter:writer
                                  forElement:[FBXCElementSnapshotWrapper ensureWrapped:element]];
     if (rc < 0) {
@@ -597,6 +616,8 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
            FBPlaceholderValueAttribute.class,
            FBTraitsAttribute.class,
            FBNativeFrameAttribute.class,
+           FBMinValueAttribute.class,
+           FBMaxValueAttribute.class,
           ];
 }
 
@@ -857,6 +878,36 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 + (NSString *)valueForElement:(id<FBElement>)element
 {
   return element.wdTraits;
+}
+
+@end
+
+@implementation FBMinValueAttribute
+
++ (NSString *)name
+{
+  return @"minValue";
+}
+
++ (NSString *)valueForElement:(id<FBElement>)element
+{
+  NSNumber *value = (NSNumber *)element.wdMinValue;
+  return value != nil ? value.stringValue : nil;
+}
+
+@end
+
+@implementation FBMaxValueAttribute
+
++ (NSString *)name
+{
+  return @"maxValue";
+}
+
++ (NSString *)valueForElement:(id<FBElement>)element
+{
+  NSNumber *value = (NSNumber *)element.wdMaxValue;
+  return value != nil ? value.stringValue : nil;
 }
 
 @end
