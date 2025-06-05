@@ -72,10 +72,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, copy, nullable) NSString *wdPlaceholderValue;
 
 /*! Element's minimum value */
-@property (nonatomic, readonly, strong, nullable) NSString *wdMinValue;
+@property (nonatomic, readonly, strong, nullable) NSNumber *wdMinValue;
 
 /*! Element's maximum value */
-@property (nonatomic, readonly, strong, nullable) NSString *wdMaxValue;
+@property (nonatomic, readonly, strong, nullable) NSNumber *wdMaxValue;
 
 /**
  Returns value of given property specified in WebDriver Spec

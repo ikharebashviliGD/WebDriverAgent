@@ -252,7 +252,7 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
 
 {
   // Base attributes common to every element
-  NSMutableDictionary<NSString *, NSString *(^)(void)> *blocks =
+  NSMutableDictionary<NSString *, id(^)(void)> *blocks =
   [@{
     FBExclusionAttributeFrame: ^{
     return NSStringFromCGRect(wrappedSnapshot.wdFrame);
