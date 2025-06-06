@@ -12,22 +12,11 @@
 #import "XCUIElement+FBUtilities.h"
 #import "XCTestPrivateSymbols.h"
 
-NSNumber * _Nullable fetchSnapshotMinValue(id<FBXCElementSnapshot> snapshot)
-{
-  if (nil == snapshot.additionalAttributes) {
-    return nil;
-  }
-  return snapshot.additionalAttributes[FB_XCAXACustomMinValueAttribute];
-}
+@interface FBXCElementSnapshotWrapper (FBMinMaxInternal)
 
-NSNumber * _Nullable fetchSnapshotMaxValue(id<FBXCElementSnapshot> snapshot)
-{
-  if (nil == snapshot.additionalAttributes) {
-    return nil;
-  }
-  return snapshot.additionalAttributes[FB_XCAXACustomMaxValueAttribute];
-}
+- (NSNumber *)fb_numericAttribute:(NSString *)attributeName symbol:(NSNumber *)symbol;
 
+@end
 
 @implementation XCUIElement (FBMinMax)
 
@@ -35,8 +24,7 @@ NSNumber * _Nullable fetchSnapshotMaxValue(id<FBXCElementSnapshot> snapshot)
 {
   @autoreleasepool {
     id<FBXCElementSnapshot> snapshot = [self fb_standardSnapshot];
-
-    return [FBXCElementSnapshotWrapper ensureWrapped:snapshot].fb_minValue;
+    return [[FBXCElementSnapshotWrapper ensureWrapped:snapshot] fb_minValue];
   }
 }
 
@@ -44,71 +32,43 @@ NSNumber * _Nullable fetchSnapshotMaxValue(id<FBXCElementSnapshot> snapshot)
 {
   @autoreleasepool {
     id<FBXCElementSnapshot> snapshot = [self fb_standardSnapshot];
-    return [FBXCElementSnapshotWrapper ensureWrapped:snapshot].fb_maxValue;
+    return [[FBXCElementSnapshotWrapper ensureWrapped:snapshot] fb_maxValue];
   }
 }
 
 @end
 
-
 @implementation FBXCElementSnapshotWrapper (FBMinMax)
 
-/**
- Returns minValue, caching it in additionalAttributes beforehand, if it has not already been done.
-*/
 - (NSNumber *)fb_minValue
 {
-  NSNumber *cached = fetchSnapshotMinValue(self);
-  if (nil != cached) {
-    return cached;
-  }
-  
-  for (id<FBXCElementSnapshot> descendant in (self._allDescendants ?: @[])) {
-    NSNumber *descendantMin = fetchSnapshotMinValue(descendant);
-    if (nil != descendantMin) {
-      return descendantMin;
-    }
-  }
-
-  NSError *error = nil;
-  NSNumber *attributeValue = [self fb_attributeValue:FB_XCAXACustomMinValueAttributeName
-                                              error:&error];
-  if (nil != attributeValue) {
-    NSMutableDictionary *updated = [NSMutableDictionary dictionaryWithDictionary:self.additionalAttributes ?: @{}];
-    updated[FB_XCAXACustomMinValueAttribute] = attributeValue;
-    self.snapshot.additionalAttributes = updated.copy;
-    return attributeValue;
-  }
-
-  NSLog(@"Cannot determine minValue of %@ natively: %@. Defaulting to nil", self.fb_description, error.description);
-  return nil;
+  return [self fb_numericAttribute:FB_XCAXACustomMinValueAttributeName
+                            symbol:FB_XCAXACustomMinValueAttribute];
 }
 
 - (NSNumber *)fb_maxValue
 {
-  NSNumber *cached = fetchSnapshotMaxValue(self);
-  if (nil != cached) {
+  return [self fb_numericAttribute:FB_XCAXACustomMaxValueAttributeName
+                            symbol:FB_XCAXACustomMaxValueAttribute];
+}
+
+- (NSNumber *)fb_numericAttribute:(NSString *)attributeName symbol:(NSNumber *)symbol
+{
+  NSNumber *cached = (self.snapshot.additionalAttributes ?: @{})[symbol];
+  if (cached) {
     return cached;
   }
 
-  for (id<FBXCElementSnapshot> descendant in (self._allDescendants ?: @[])) {
-    NSNumber *descendantMax = fetchSnapshotMaxValue(descendant);
-    if (nil != descendantMax) {
-      return descendantMax;
-    }
-  }
-
   NSError *error = nil;
-  NSNumber *attributeValue = [self fb_attributeValue:FB_XCAXACustomMaxValueAttributeName
-                                              error:&error];
-  if (nil != attributeValue) {
+  NSNumber *raw = [self fb_attributeValue:attributeName error:&error];
+  if (raw) {
     NSMutableDictionary *updated = [NSMutableDictionary dictionaryWithDictionary:self.additionalAttributes ?: @{}];
-    updated[FB_XCAXACustomMaxValueAttribute] = attributeValue;
+    updated[symbol] = raw;
     self.snapshot.additionalAttributes = updated.copy;
-    return attributeValue;
+    return raw;
   }
 
-  NSLog(@"Cannot determine maxValue of %@ natively: %@. Defaulting to nil", self.fb_description, error.description);
+  NSLog(@"[FBMinMax] Cannot determine %@ for %@: %@", attributeName, self.fb_description, error.localizedDescription);
   return nil;
 }
 
