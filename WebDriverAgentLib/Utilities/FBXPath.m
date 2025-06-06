@@ -383,6 +383,15 @@ static NSString *const topNodeIndexPath = @"top";
       // Include nativeFrame only when requested
       [includedAttributes removeObject:FBNativeFrameAttribute.class];
     }
+    if (!FBConfiguration.includePlaceholderValueInPageSource) {
+      // placeholderValue may be expensive to resolve for certain text fields
+      [includedAttributes removeObject:FBPlaceholderValueAttribute.class];
+    }
+    if (!FBConfiguration.includeMinMaxValueInPageSource) {
+      // minValue/maxValue are retrieved from private APIs and may be slow on deep trees
+      [includedAttributes removeObject:FBMinValueAttribute.class];
+      [includedAttributes removeObject:FBMaxValueAttribute.class];
+    }
     if (nil != excludedAttributes) {
       for (NSString *excludedAttributeName in excludedAttributes) {
         for (Class supportedAttribute in FBElementAttribute.supportedAttributes) {
@@ -891,8 +900,7 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 
 + (NSString *)valueForElement:(id<FBElement>)element
 {
-  NSNumber *value = (NSNumber *)element.wdMinValue;
-  return value != nil ? value.stringValue : nil;
+  return [element.wdMinValue stringValue];
 }
 
 @end
@@ -906,8 +914,7 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 
 + (NSString *)valueForElement:(id<FBElement>)element
 {
-  NSNumber *value = (NSNumber *)element.wdMaxValue;
-  return value != nil ? value.stringValue : nil;
+  return [element.wdMaxValue stringValue];
 }
 
 @end
