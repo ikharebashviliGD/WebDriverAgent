@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+#import "FBLogger.h"
 #import "XCUIElement+FBMinMax.h"
 #import "FBXCElementSnapshotWrapper+Helpers.h"
 #import "XCUIElement+FBUtilities.h"
@@ -68,7 +69,7 @@
     return raw;
   }
 
-  NSLog(@"[FBMinMax] Cannot determine %@ for %@: %@", attributeName, self.fb_description, error.localizedDescription);
+  [FBLogger logFmt:@"[FBMinMax] Cannot determine %@ for %@: %@", attributeName, self.fb_description, error.localizedDescription];
   return nil;
 }
 
