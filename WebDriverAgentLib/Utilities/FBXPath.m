@@ -383,10 +383,6 @@ static NSString *const topNodeIndexPath = @"top";
       // Include nativeFrame only when requested
       [includedAttributes removeObject:FBNativeFrameAttribute.class];
     }
-    if (!FBConfiguration.includePlaceholderValueInPageSource) {
-      // placeholderValue may be expensive to resolve for certain text fields
-      [includedAttributes removeObject:FBPlaceholderValueAttribute.class];
-    }
     if (!FBConfiguration.includeMinMaxValueInPageSource) {
       // minValue/maxValue are retrieved from private APIs and may be slow on deep trees
       [includedAttributes removeObject:FBMinValueAttribute.class];

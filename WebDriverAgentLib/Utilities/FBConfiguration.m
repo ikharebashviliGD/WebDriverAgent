@@ -63,7 +63,6 @@ static UIInterfaceOrientation FBScreenshotOrientation;
 #endif
 static BOOL FBShouldIncludeHittableInPageSource = NO;
 static BOOL FBShouldIncludeNativeFrameInPageSource = NO;
-static BOOL FBShouldIncludePlaceholderValueInPageSource = NO;
 static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
 
 @implementation FBConfiguration
@@ -664,16 +663,6 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
 + (BOOL)includeNativeFrameInPageSource
 {
   return FBShouldIncludeNativeFrameInPageSource;
-}
-
-+ (void)setIncludePlaceholderValueInPageSource:(BOOL)enabled
-{
-  FBShouldIncludePlaceholderValueInPageSource = enabled;
-}
-
-+ (BOOL)includePlaceholderValueInPageSource
-{
-  return FBShouldIncludePlaceholderValueInPageSource;
 }
 
 + (void)setIncludeMinMaxValueInPageSource:(BOOL)enabled

@@ -62,7 +62,7 @@
 
   NSError *error = nil;
   NSNumber *raw = [self fb_attributeValue:attributeName error:&error];
-  if (raw) {
+  if (nil != raw) {
     NSMutableDictionary *updated = [NSMutableDictionary dictionaryWithDictionary:self.additionalAttributes ?: @{}];
     updated[symbol] = raw;
     self.snapshot.additionalAttributes = updated.copy;
